@@ -1,0 +1,38 @@
+---
+- name: Nastavit časové pásmo
+  community.general.timezone:
+    name: "{{ common_timezone }}"
+
+- name: Aktualizovat cache apt
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Nainstalovat základní balíčky
+  ansible.builtin.apt:
+    name: "{{ common_base_packages }}"
+    state: present
+
+- name: Povolit a spustit chrony (synchronizace času)
+  ansible.builtin.service:
+    name: chrony
+    state: started
+    enabled: true
+
+- name: Zapnout automatické bezpečnostní aktualizace
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+
+- name: Vytvořit základní adresář honeypotu
+  ansible.builtin.file:
+    path: "{{ honeypot_base_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"

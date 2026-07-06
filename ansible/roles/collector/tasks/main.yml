@@ -1,0 +1,80 @@
+---
+- name: Nainstalovat python3-venv
+  ansible.builtin.apt:
+    name: python3-venv
+    state: present
+
+- name: Vytvořit adresáře collectoru
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ collector_install_dir }}"
+    - "{{ honeypot_data_dir }}/collector"
+    - "{{ honeypot_base_dir }}/bin"
+
+- name: Nakopírovat balíček collectoru
+  ansible.builtin.copy:
+    src: "{{ collector_src_dir }}"
+    dest: "{{ collector_install_dir }}/"
+    owner: root
+    group: root
+    mode: "0644"
+    directory_mode: "0755"
+  register: collector_sync
+
+- name: Vytvořit virtuální prostředí
+  ansible.builtin.command: "python3 -m venv {{ collector_venv }}"
+  args:
+    creates: "{{ collector_venv }}/bin/python"
+
+- name: Nainstalovat geoip2 (pouze při zapnutém GeoIP)
+  ansible.builtin.pip:
+    name: "geoip2>=4.7,<5"
+    virtualenv: "{{ collector_venv }}"
+  when: geoip_city_db | length > 0 or geoip_asn_db | length > 0
+
+- name: Nasadit spouštěcí skript ingestu
+  ansible.builtin.template:
+    src: run-ingest.sh.j2
+    dest: "{{ honeypot_base_dir }}/bin/run-ingest.sh"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Inicializovat databázi collectoru
+  ansible.builtin.command: >-
+    {{ collector_venv }}/bin/python -m honeypot_collector.cli
+    --db {{ collector_db_path }} initdb
+  environment:
+    PYTHONPATH: "{{ collector_install_dir }}"
+  args:
+    creates: "{{ collector_db_path }}"
+
+- name: Nasadit systemd service pro ingest
+  ansible.builtin.template:
+    src: honeypot-ingest.service.j2
+    dest: /etc/systemd/system/honeypot-ingest.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload systemd
+
+- name: Nasadit systemd timer pro ingest
+  ansible.builtin.template:
+    src: honeypot-ingest.timer.j2
+    dest: /etc/systemd/system/honeypot-ingest.timer
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload systemd
+
+- name: Povolit a spustit timer ingestu
+  ansible.builtin.systemd_service:
+    name: honeypot-ingest.timer
+    enabled: true
+    state: started
+    daemon_reload: true

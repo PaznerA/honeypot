@@ -1,0 +1,21 @@
+---
+- name: Nainstalovat nftables
+  ansible.builtin.apt:
+    name: nftables
+    state: present
+
+- name: Nasadit pravidla nftables
+  ansible.builtin.template:
+    src: nftables.conf.j2
+    dest: /etc/nftables.conf
+    owner: root
+    group: root
+    mode: "0644"
+    validate: "nft -c -f %s"
+  notify: Reload nftables
+
+- name: Povolit a spustit nftables
+  ansible.builtin.service:
+    name: nftables
+    state: started
+    enabled: true

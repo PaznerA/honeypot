@@ -1,0 +1,40 @@
+---
+- name: Vytvořit adresář pro apt klíče
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Stáhnout GPG klíč Dockeru
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Přidat apt repozitář Dockeru
+  ansible.builtin.deb822_repository:
+    name: docker
+    types: [deb]
+    uris: "https://download.docker.com/linux/ubuntu"
+    signed_by: /etc/apt/keyrings/docker.asc
+    suites: "{{ ansible_distribution_release }}"
+    components: [stable]
+    architectures: "{{ docker_apt_arch }}"
+    state: present
+    enabled: true
+
+- name: Nainstalovat Docker Engine a compose plugin
+  ansible.builtin.apt:
+    name: "{{ docker_packages }}"
+    state: present
+    update_cache: true
+
+- name: Povolit a spustit Docker
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true

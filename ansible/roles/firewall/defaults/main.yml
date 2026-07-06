@@ -1,0 +1,8 @@
+---
+admin_ssh_port: 2222
+admin_allowed_cidrs:
+  - 0.0.0.0/0
+honeypot_exposed_ports:
+  - 22
+  - 23
+  - 80

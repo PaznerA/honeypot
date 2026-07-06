@@ -1,0 +1,8 @@
+---
+honeypot_base_dir: /opt/honeypot
+honeypot_data_dir: /opt/honeypot/data
+honeypot_src_dir: "{{ playbook_dir }}/../sensors"
+cowrie_ssh_port: 22
+cowrie_telnet_port: 23
+http_honeypot_port: 80
+cowrie_image_tag: latest

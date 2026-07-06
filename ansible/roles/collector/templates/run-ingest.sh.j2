@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# Zpracuje logy všech senzorů do databáze collectoru. Idempotentní
+# (sledování offsetu + deduplikace), bezpečné pro opakované spouštění timerem.
+set -euo pipefail
+
+PY="{{ collector_venv }}/bin/python"
+export PYTHONPATH="{{ collector_install_dir }}"
+DB="{{ collector_db_path }}"
+
+GEO_ARGS=()
+{% if geoip_city_db | length > 0 %}
+GEO_ARGS+=(--geoip-city-db "{{ geoip_city_db }}")
+{% endif %}
+{% if geoip_asn_db | length > 0 %}
+GEO_ARGS+=(--geoip-asn-db "{{ geoip_asn_db }}")
+{% endif %}
+
+{% for source in collector_sources %}
+if [[ -f "{{ source.path }}" ]]; then
+  "$PY" -m honeypot_collector.cli --db "$DB" ingest \
+    --sensor "{{ source.sensor }}" --file "{{ source.path }}" "${GEO_ARGS[@]}"
+fi
+{% endfor %}

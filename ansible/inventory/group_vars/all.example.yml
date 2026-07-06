@@ -1,0 +1,40 @@
+---
+# Zkopíruj na group_vars/all.yml a uprav. Citlivé hodnoty drž v Ansible Vault.
+
+# --- Hardening / správcovský přístup -----------------------------------
+# Nový port pro REÁLNÉ administrátorské SSH (port 22 zůstává honeypotu Cowrie).
+admin_ssh_port: 2222
+# Veřejné klíče správců pro přístup na admin SSH.
+admin_authorized_keys: []
+# admin_authorized_keys:
+#   - "ssh-ed25519 AAAA... admin@ceska-obrana"
+
+# --- Umístění dat a instalace ------------------------------------------
+honeypot_base_dir: /opt/honeypot
+honeypot_data_dir: /opt/honeypot/data
+collector_db_path: /opt/honeypot/data/collector/honeypot.sqlite
+
+# --- Porty senzorů (co je vystaveno útočníkům) -------------------------
+cowrie_ssh_port: 22
+cowrie_telnet_port: 23
+http_honeypot_port: 80
+
+# --- Firewall ----------------------------------------------------------
+# Zdrojové CIDR, ze kterých je povolen přístup na admin SSH port.
+admin_allowed_cidrs:
+  - 0.0.0.0/0   # ZUŽ na rozsahy své organizace!
+# Porty vystavené útočníkům (nechány otevřené pro všechny).
+honeypot_exposed_ports:
+  - "{{ cowrie_ssh_port }}"
+  - "{{ cowrie_telnet_port }}"
+  - "{{ http_honeypot_port }}"
+
+# --- Collector ---------------------------------------------------------
+# Jak často host-side collector zpracuje logy senzorů (systemd timer).
+collector_interval: "*:0/5"   # každých 5 minut
+# Volitelné cesty k MaxMind GeoIP databázím na hostiteli (prázdné = bez geo).
+geoip_city_db: ""
+geoip_asn_db: ""
+
+# --- Retence dat -------------------------------------------------------
+raw_log_retention_days: 90

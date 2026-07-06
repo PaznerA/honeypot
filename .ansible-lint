@@ -1,0 +1,25 @@
+---
+profile: production
+
+exclude_paths:
+  - .venv/
+  - .cache/
+  - collector/
+  - tests/
+
+# Kolekce se instalují přes ansible/requirements.yml; offline CI je nemá lokálně.
+offline: true
+
+skip_list:
+  - galaxy[no-changelog]
+  # Sdílené globální proměnné jsou záměrně definované napříč rolemi
+  # (nastavené v group_vars/all a konzumované více rolemi), prefix role nedává smysl.
+  - var-naming[no-role-prefix]
+
+kinds:
+  - requirements: "ansible/requirements.yml"
+  - meta: "ansible/roles/**/meta/main.yml"
+  - playbook: "ansible/site.yml"
+  - tasks: "ansible/roles/**/tasks/*.yml"
+  - handlers: "ansible/roles/**/handlers/*.yml"
+  - vars: "ansible/**/defaults/*.yml"

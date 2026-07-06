@@ -1,0 +1,46 @@
+---
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  collector:
+    name: Collector (ruff + pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Instalace
+        run: pip install -e ".[dev]"
+      - name: Ruff
+        run: ruff check .
+      - name: Pytest
+        run: pytest
+
+  ansible:
+    name: Ansible (yamllint + ansible-lint + syntax-check)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Instalace nástrojů
+        run: pip install ansible ansible-lint yamllint
+      - name: Instalace kolekcí
+        run: ansible-galaxy collection install -r ansible/requirements.yml
+      - name: yamllint
+        run: yamllint .
+      - name: ansible-lint
+        run: ansible-lint
+      - name: syntax-check
+        working-directory: ansible
+        run: |
+          cp inventory/hosts.example.ini inventory/hosts.ini
+          cp inventory/group_vars/all.example.yml inventory/group_vars/all.yml
+          ansible-playbook --syntax-check site.yml
