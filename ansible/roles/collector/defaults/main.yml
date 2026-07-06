@@ -1,0 +1,17 @@
+---
+honeypot_base_dir: /opt/honeypot
+honeypot_data_dir: /opt/honeypot/data
+collector_src_dir: "{{ playbook_dir }}/../collector/honeypot_collector"
+collector_install_dir: /opt/honeypot/collector
+collector_venv: /opt/honeypot/collector-venv
+collector_db_path: /opt/honeypot/data/collector/honeypot.sqlite
+collector_interval: "*:0/5"
+geoip_city_db: ""
+geoip_asn_db: ""
+
+# Cesty k log souborům senzorů, které collector zpracovává.
+collector_sources:
+  - sensor: cowrie
+    path: "{{ honeypot_data_dir }}/cowrie/log/cowrie.json"
+  - sensor: http
+    path: "{{ honeypot_data_dir }}/http/http.json"

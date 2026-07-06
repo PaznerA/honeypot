@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# fail2ban chrání POUZE reálné admin SSH. Honeypot porty (22/23/80) chráněny
+# být NESMÍ — jejich úkolem je útoky přijímat a zaznamenávat.
+[DEFAULT]
+banaction = nftables-multiport
+backend = systemd
+
+[sshd]
+enabled = true
+port = {{ admin_ssh_port }}
+maxretry = 4
+findtime = 600
+bantime = 3600

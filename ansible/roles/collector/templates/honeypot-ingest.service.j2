@@ -1,0 +1,16 @@
+[Unit]
+# {{ ansible_managed }}
+Description=Honeypot collector ingest
+After=docker.service
+Wants=docker.service
+
+[Service]
+Type=oneshot
+ExecStart={{ honeypot_base_dir }}/bin/run-ingest.sh
+Nice=10
+# Základní sandboxing procesu ingestu.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths={{ honeypot_data_dir }}
+PrivateTmp=true

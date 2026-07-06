@@ -1,0 +1,40 @@
+---
+- name: Vytvořit datové adresáře senzorů
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ honeypot_data_dir }}"
+    - "{{ honeypot_data_dir }}/cowrie/log"
+    - "{{ honeypot_data_dir }}/cowrie/dl"
+    - "{{ honeypot_data_dir }}/http"
+
+- name: Nakopírovat zdroje senzorů na hostitele
+  ansible.builtin.copy:
+    src: "{{ honeypot_src_dir }}/"
+    dest: "{{ honeypot_base_dir }}/sensors/"
+    owner: root
+    group: root
+    mode: "0644"
+    directory_mode: "0755"
+  register: sensors_sync
+
+- name: Nasadit .env pro docker compose
+  ansible.builtin.template:
+    src: sensors.env.j2
+    dest: "{{ honeypot_base_dir }}/sensors/.env"
+    owner: root
+    group: root
+    mode: "0640"
+  register: sensors_env
+
+- name: Spustit/aktualizovat stack senzorů
+  community.docker.docker_compose_v2:
+    project_src: "{{ honeypot_base_dir }}/sensors"
+    state: present
+    build: policy
+    pull: missing
+    remove_orphans: true

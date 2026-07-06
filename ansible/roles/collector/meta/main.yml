@@ -1,0 +1,16 @@
+---
+galaxy_info:
+  role_name: collector
+  author: honeypot-project
+  description: Honeypot VPS provisioning role (collector)
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+  galaxy_tags:
+    - honeypot
+    - security
+dependencies: []

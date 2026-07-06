@@ -1,0 +1,55 @@
+---
+- name: Ověřit, že jsou nastaveny klíče správců
+  ansible.builtin.assert:
+    that:
+      - admin_authorized_keys | length > 0
+    fail_msg: >-
+      admin_authorized_keys je prázdné. Nastav veřejné klíče správců v
+      group_vars, jinak by se přesun SSH portu mohl uzamknout ven.
+
+- name: Nainstalovat fail2ban
+  ansible.builtin.apt:
+    name: fail2ban
+    state: present
+
+- name: Nastavit autorizované klíče pro admin účet
+  ansible.posix.authorized_key:
+    user: "{{ hardening_admin_user }}"
+    key: "{{ item }}"
+    state: present
+    exclusive: false
+  loop: "{{ admin_authorized_keys }}"
+
+- name: Nasadit konfiguraci sshd (přesun portu, zákaz hesel a root loginu)
+  ansible.builtin.template:
+    src: sshd_hardening.conf.j2
+    dest: /etc/ssh/sshd_config.d/10-honeypot-hardening.conf
+    owner: root
+    group: root
+    mode: "0644"
+    validate: "sshd -t -f %s"
+  notify: Restart ssh
+
+- name: Nasadit sysctl hardening
+  ansible.builtin.template:
+    src: sysctl-hardening.conf.j2
+    dest: /etc/sysctl.d/99-honeypot-hardening.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload sysctl
+
+- name: Nasadit fail2ban jail pro admin SSH
+  ansible.builtin.template:
+    src: jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart fail2ban
+
+- name: Povolit a spustit fail2ban
+  ansible.builtin.service:
+    name: fail2ban
+    state: started
+    enabled: true

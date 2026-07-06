@@ -1,0 +1,11 @@
+[Unit]
+# {{ ansible_managed }}
+Description=Spouštění honeypot ingestu podle rozvrhu
+
+[Timer]
+OnCalendar={{ collector_interval }}
+Persistent=true
+RandomizedDelaySec=30
+
+[Install]
+WantedBy=timers.target

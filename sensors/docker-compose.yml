@@ -1,0 +1,51 @@
+---
+# Stack senzorů honeypotu. Každý senzor loguje JSON do bind-mount adresáře,
+# odkud logy čte host-side collector (systemd timer nasazený Ansiblem).
+#
+# BEZPEČNOST: senzory jsou nízkointerakční a běží izolovaně. Reálné SSH hostitele
+# MUSÍ být přesunuto na jiný port (role hardening), aby port 22 patřil Cowrie.
+
+services:
+  cowrie:
+    image: cowrie/cowrie:${COWRIE_TAG:-latest}
+    restart: unless-stopped
+    ports:
+      - "${COWRIE_SSH_PORT:-22}:2222"
+      - "${COWRIE_TELNET_PORT:-23}:2223"
+    volumes:
+      - "${DATA_DIR:-./data}/cowrie/log:/cowrie/cowrie-git/var/log/cowrie"
+      - "${DATA_DIR:-./data}/cowrie/dl:/cowrie/cowrie-git/var/lib/cowrie/downloads"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  http-honeypot:
+    build:
+      context: ./http-honeypot
+    image: honeypot/http-honeypot:${HTTP_TAG:-local}
+    restart: unless-stopped
+    environment:
+      HONEYPOT_PORT: "8080"
+      HONEYPOT_LOG: "/var/log/honeypot/http.json"
+    ports:
+      - "${HTTP_PORT:-80}:8080"
+    volumes:
+      - "${DATA_DIR:-./data}/http:/var/log/honeypot"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"

@@ -1,0 +1,41 @@
+#!/usr/sbin/nft -f
+# {{ ansible_managed }}
+# Firewall hostitele honeypotu.
+# Pozn.: porty publikované Dockerem procházejí řetězcem FORWARD/DNAT, který si
+# spravuje Docker sám; tato input politika chrání služby BĚŽÍCÍ NA HOSTITELI
+# (zejména reálné admin SSH). Honeypot porty jsou zde povoleny i pro případ
+# host-networked senzorů.
+
+flush ruleset
+
+table inet filter {
+    chain input {
+        type filter hook input priority 0; policy drop;
+
+        iif "lo" accept
+        ct state established,related accept
+        ct state invalid drop
+
+        # ICMP / ping (omezeně)
+        ip protocol icmp icmp type echo-request limit rate 5/second accept
+        ip6 nexthdr icmpv6 accept
+
+        # Reálné admin SSH pouze z povolených rozsahů
+{% for cidr in admin_allowed_cidrs %}
+        ip saddr {{ cidr }} tcp dport {{ admin_ssh_port }} ct state new accept
+{% endfor %}
+
+        # Porty vystavené útočníkům (honeypot senzory)
+{% for port in honeypot_exposed_ports %}
+        tcp dport {{ port }} ct state new accept
+{% endfor %}
+    }
+
+    chain forward {
+        type filter hook forward priority 0; policy accept;
+    }
+
+    chain output {
+        type filter hook output priority 0; policy accept;
+    }
+}

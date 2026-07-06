@@ -1,0 +1,4 @@
+---
+admin_ssh_port: 2222
+admin_authorized_keys: []
+hardening_admin_user: "{{ ansible_user | default('deploy') }}"

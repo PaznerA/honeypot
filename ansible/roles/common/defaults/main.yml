@@ -1,0 +1,10 @@
+---
+common_timezone: Europe/Prague
+common_base_packages:
+  - ca-certificates
+  - curl
+  - gnupg
+  - chrony
+  - unattended-upgrades
+  - python3
+  - python3-apt
